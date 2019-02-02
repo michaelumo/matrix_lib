@@ -32,22 +32,31 @@ class Matrix
 
 	public:
 		Matrix();
-		Matrix(int r, int c);
-		void resize(int r, int c);
+		Matrix(int r, int c); 	// 行列のコンストラクタ
+		Matrix(int r); 			// ベクトルのコンストラクタ
 
-		Matrix I(); 					// 成分を単位行列化
+		void resize(int r, int c); 	// 行列のサイズ変更
+		void resize(int r); 		// ベクトルのサイズ変更
+
+		Matrix I(); 				// 成分を単位行列化
 		Matrix t(); 				// 転置
 		Matrix inv(); 				// 逆行列
 
 		void show(); 				// 成分の表示
+		void show_gorgeous(); 		// 括弧付き
 
 		int getRows();
 		int getRows() const;
 		int getCols();
 		int getCols() const;
 
+		// 行列の要素指定してアクセスする
 		double& operator()(int r, int c);
 		const double& operator()(int r, int c) const;
+
+		// ベクトルの要素指定してアクセスする
+		double& operator()(int n);
+		const double& operator()(int n) const;
 };
 
 Matrix::Matrix()
@@ -55,6 +64,7 @@ Matrix::Matrix()
 	;
 }
 
+// 行列のコンストラクタ
 Matrix::Matrix(int r, int c)
 {
 	m.resize(r);
@@ -69,6 +79,19 @@ Matrix::Matrix(int r, int c)
 	}
 }
 
+// ベクトルのコンストラクタ
+Matrix::Matrix(int r)
+{
+	m.resize(r);
+	for (size_t i = 0; i < m.size(); i++) {
+		m[i].resize(1);
+	}
+
+	for (size_t r = 0; r < m.size(); r++) {
+		m[r][0] = 0.0;
+	}
+}
+
 void Matrix::resize(int r, int c)
 {
 	m.resize(r);
@@ -80,6 +103,18 @@ void Matrix::resize(int r, int c)
 		for (size_t c = 0; c < m[0].size(); c++) {
 			m[r][c] = 0.0;
 		}
+	}
+}
+
+void Matrix::resize(int r)
+{
+	m.resize(r);
+	for (size_t i = 0; i < m.size(); i++) {
+		m[i].resize(1);
+	}
+
+	for (size_t r = 0; r < m.size(); r++) {
+		m[r][0] = 0.0;
 	}
 }
 
@@ -108,6 +143,7 @@ Matrix Matrix::t()
 	return tmp;
 }
 
+// 成分の表示
 void Matrix::show()
 {
 	std::cout << std::fixed;
@@ -120,6 +156,23 @@ void Matrix::show()
 	std::cout << std::defaultfloat;
 }
 
+// 括弧付き
+void Matrix::show_gorgeous()
+{
+	std::cout << std::fixed;
+	for (size_t r = 0; r < m.size(); r++) {
+		std::cout << "│ ";
+		for (size_t c = 0; c < m[0].size(); c++) {
+			std::cout << std::setprecision(2) << m[r][c] << "\t";
+		}
+		std::cout << "│";
+		std::cout << std::endl;
+	}
+	std::cout << std::defaultfloat;
+}
+
+// 要素を指定する()オペレータ
+//// 行列
 const double& Matrix::operator()(int r, int c) const
 {
 	return m[r][c];
@@ -130,6 +183,24 @@ double& Matrix::operator()(int r, int c)
 	return m[r][c];
 }
 
+//// ベクトル
+const double& Matrix::operator()(int n) const
+{
+	if (getRows() > 1) { // 縦ベクトルの場合
+		return m[n][0];
+	} else if (getCols() > 1) { // 横ベクトル
+		return m[0][n];
+	}
+}
+
+double& Matrix::operator()(int n)
+{
+	if (getRows() > 1) { // 縦ベクトルの場合
+		return m[n][0];
+	} else if (getCols() > 1) { // 横ベクトル
+		return m[0][n];
+	}
+}
 
 int Matrix::getRows()
 {
