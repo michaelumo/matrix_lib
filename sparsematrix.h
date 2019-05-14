@@ -48,20 +48,21 @@ class SparseMatrix
 
 		void resize(int r, int c); 	// 行列のサイズ変更
 
-		SparseMatrix I(); 				// 成分を単位行列化
-		SparseMatrix inv(); 			// 疎行列の逆行列をSparseMatrix形式で返す
+		SparseMatrix I(); 		// 成分を単位行列化
+		SparseMatrix inv(); 	// 疎行列の逆行列をSparseMatrix形式で返す
 
-		void show(); 				// 成分のリスト表示
-		void show_matrix(); 		// 成分の行列表示
+		void show(); 			// 成分のリスト表示
+		void show_matrix(); 	// 成分の行列表示
 
-		int getRows(); 		 	// 疎行列の行数を取得
-		int getRows() const; 	// 疎行列の行数を取得
-		int getCols(); 			// 疎行列の列数を取得
-		int getCols() const;	// 疎行列の列数を取得
-		int getMatrixListSize(); 	// 疎行列リストの大きさ
-		Sparse getMatrixListElment(int i); 	// 疎行列リストから要素番号指定でひとつ取り出す
+		int getRows(); 		 						// 疎行列の行数を取得
+		int getRows() const; 						// 疎行列の行数を取得
+		int getCols(); 								// 疎行列の列数を取得
+		int getCols() const;						// 疎行列の列数を取得
+		int getMatrixListSize() const; 				// 疎行列リストの大きさ
+		Sparse getMatrixListElment(int i) const; 	// 疎行列リストから要素番号指定でひとつ取り出す
 
 		// 行列の要素指定してアクセスする
+		const double operator()(int r, int c) const;
 		double& operator()(int r, int c);
 
 		Matrix sparse2matrix() const;
@@ -144,16 +145,25 @@ int SparseMatrix::getCols() const	// 疎行列の列数を取得
 	return col;
 }
 
-int SparseMatrix::getMatrixListSize()  	// 疎行列リストの大きさ
+int SparseMatrix::getMatrixListSize() const  	// 疎行列リストの大きさ
 {
 	return m.size();
 }
-Sparse SparseMatrix::getMatrixListElment(int i)  	// 疎行列リストから要素番号指定でひとつ取り出す
+Sparse SparseMatrix::getMatrixListElment(int i) const  	// 疎行列リストから要素番号指定でひとつ取り出す
 {
 	return m[i];
 }
 
 // 行列の要素指定してアクセスする
+const double SparseMatrix::operator()(int r, int c) const
+{
+	for (int i = 0; i < m.size(); i++) {
+		if (m[i].row == r && m[i].col == c)
+			return m[i].val;
+	}
+	return 0.0;
+}
+
 double& SparseMatrix::operator()(int r, int c)
 {
 	for (int i = 0; i < m.size(); i++) {
@@ -195,7 +205,7 @@ SparseMatrix SparseMatrix::inv() // 疎行列の逆行列をSparseMatrix形式�
 /********************************************
  * 四則演算のクラス外関数
  ********************************************/
-SparseMatrix operator+(SparseMatrix &A, SparseMatrix &B)
+SparseMatrix operator+(const SparseMatrix &A, const SparseMatrix &B)
 {
 	SparseMatrix C(A.getRows(), A.getCols());
 
@@ -211,7 +221,7 @@ SparseMatrix operator+(SparseMatrix &A, SparseMatrix &B)
 	return C;
 }
 
-SparseMatrix operator-(SparseMatrix &A, SparseMatrix &B)
+SparseMatrix operator-(const SparseMatrix &A, const SparseMatrix &B)
 {
 	SparseMatrix C(A.getRows(), A.getCols());
 
@@ -235,22 +245,19 @@ SparseMatrix operator*(const SparseMatrix &A, const SparseMatrix &B)
 		exit(1);
 	}
 
-	Matrix tmpA = A.sparse2matrix();
-	Matrix tmpB = B.sparse2matrix();
-	Matrix tmpC = tmpA * tmpB;
-	// Matrix -> SparseMatrix
-	SparseMatrix tmpSparse(tmpC.getRows(), tmpC.getCols());
-	for (int i = 0; i < tmpC.getRows(); i++) {
-		for (int j = 0; j < tmpC.getCols(); j++) {
-			if (tmpC(i,j) == 0.0) {
-				;
-			} else {
-				tmpSparse(i,j) = tmpC(i,j);
-			}
+	// 疎行列用の乗算手続き
+	// Aのリストの要素に対応するBの要素（無ければ0.0）を乗算する
+	SparseMatrix C(A.getRows(), B.getCols());
+	for (int k = 0; k < C.getCols(); k++) {
+		for (int i = 0; i < A.getMatrixListSize(); i++) {
+			int Arow = A.getMatrixListElment(i).row;
+			int Acol = A.getMatrixListElment(i).col;
+			double c = A.getMatrixListElment(i).val * B(Acol, k);
+			C(Arow, k) += c;
 		}
 	}
 
-	return tmpSparse;
+	return C;
 }
 
 Matrix SparseMatrix::sparse2matrix() const
