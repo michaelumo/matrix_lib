@@ -32,6 +32,7 @@ class Matrix
 
 	public:
 		Matrix();
+		~Matrix();
 		Matrix(int r, int c); 	// 行列のコンストラクタ
 		Matrix(int r); 			// ベクトルのコンストラクタ
 
@@ -41,6 +42,7 @@ class Matrix
 		Matrix I(); 				// 成分を単位行列化
 		Matrix t(); 				// 転置
 		Matrix inv(); 				// 逆行列
+		Matrix diag(Matrix &v, int k); 	// 対角要素を配置する
 
 		void show(); 				// 成分の表示
 		void show_gorgeous(); 		// 括弧付き
@@ -60,6 +62,11 @@ class Matrix
 };
 
 Matrix::Matrix()
+{
+	;
+}
+
+Matrix::~Matrix()
 {
 	;
 }
@@ -149,7 +156,8 @@ void Matrix::show()
 	std::cout << std::fixed;
 	for (size_t r = 0; r < m.size(); r++) {
 		for (size_t c = 0; c < m[0].size(); c++) {
-			std::cout << std::setprecision(2) << m[r][c] << "\t";
+			std::cout << std::setprecision(2) <<
+				m[r][c] << "\t";
 		}
 		std::cout << std::endl;
 	}
@@ -163,7 +171,8 @@ void Matrix::show_gorgeous()
 	for (size_t r = 0; r < m.size(); r++) {
 		std::cout << "│ ";
 		for (size_t c = 0; c < m[0].size(); c++) {
-			std::cout << std::setprecision(2) << m[r][c] << "\t";
+			std::cout << //std::setprecision(2) <<
+				m[r][c] << "\t";
 		}
 		std::cout << "│";
 		std::cout << std::endl;
@@ -390,6 +399,28 @@ Matrix Matrix::inv()
 		}
 	}
 	return m_inv;
+}
+
+Matrix Matrix::diag(Matrix &v, int k)
+{
+	// 対角要素を配置する
+	// Matrix &v 	配置する対角要素のベクトル
+	// int k 		配置する場所, k=0: 対角要素, k>0: 上対角要素, k<0: 下対角要素
+	if (k == 0) {
+		for (int i = 0; i < v.getRows(); i++) {
+			m[i][i] = v(i);
+		}
+	} else if (k > 0) {
+		for (int i = 0; i < v.getRows(); i++) {
+			m[i+k][i] = v(i);
+		}
+	} else if (k < 0) {
+		for (int i = 0; i < v.getRows(); i++) {
+			m[i][i-k] = v(i);
+		}
+	}
+
+	return *this;
 }
 
 #endif
