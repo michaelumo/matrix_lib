@@ -26,8 +26,14 @@ class Matrix
 		std::vector<std::vector<double>> m;
 
 		// 行・列の入れ替え
-		std::vector<std::vector<double>> pivot_r(std::vector<std::vector<double>> &a, int i, int j);
-		std::vector<std::vector<double>> pivot_c(std::vector<std::vector<double>> &a, int i, int j);
+		void pivot_r(std::vector<std::vector<double>> &a, int i, int j);
+		void pivot_c(std::vector<std::vector<double>> &a, int i, int j);
+		std::vector<double> *a;
+		std::vector<double> *b;
+		std::vector<double> *c;
+		std::vector<double> *d;
+		double cstar(int i);
+		double dstar(int i);
 		void pivot_c(Matrix &a, int i, int j);
 
 	public:
@@ -38,6 +44,13 @@ class Matrix
 
 		void resize(int r, int c); 	// 行列のサイズ変更
 		void resize(int r); 		// ベクトルのサイズ変更
+		void setvalue(std::vector<double> &tmp);	//値の代入
+		Matrix TDMA(	//三重対角行列アルゴリズム(トーマスのアルゴリズム)
+			std::vector<double> &A,
+		  std::vector<double> &B,
+		  std::vector<double> &C,
+		  std::vector<double> &D
+		);
 
 		Matrix I(); 				// 成分を単位行列化
 		Matrix t(); 				// 転置
@@ -122,6 +135,13 @@ void Matrix::resize(int r)
 
 	for (size_t r = 0; r < m.size(); r++) {
 		m[r][0] = 0.0;
+	}
+}
+
+void Matrix::setvalue(std::vector<double> &tmp){
+	Matrix(tmp.size(), 0);
+	for(int i = 0; i < tmp.size(); i++){
+			m[i][0] = tmp[i];
 	}
 }
 
@@ -303,7 +323,7 @@ Matrix operator*(Matrix &A, const double &k)
 	return C;
 }
 
-std::vector<std::vector<double>> Matrix::pivot_r(std::vector<std::vector<double>> &a, int i, int j)
+void Matrix::pivot_r(std::vector<std::vector<double>> &a, int i, int j)
 {
 	// i, j行の入れ替え
 	for (int k = 0; k < static_cast<int>(a.size()); ++k) {
@@ -312,10 +332,9 @@ std::vector<std::vector<double>> Matrix::pivot_r(std::vector<std::vector<double>
 		a[i][k] = a[j][k];
 		a[j][k] = tmp;
 	}
-	return a;
 }
 
-std::vector<std::vector<double>> Matrix::pivot_c(std::vector<std::vector<double>> &a, int i, int j)
+void Matrix::pivot_c(std::vector<std::vector<double>> &a, int i, int j)
 {
 	// i, j列の入れ替え
 	for (int k = 0; k < static_cast<int>(a.size()); ++k) {
@@ -324,7 +343,6 @@ std::vector<std::vector<double>> Matrix::pivot_c(std::vector<std::vector<double>
 		a[k][i] = a[k][j];
 		a[k][j] = tmp;
 	}
-	return a;
 }
 
 void Matrix::pivot_c(Matrix &a, int i, int j)
@@ -421,6 +439,39 @@ Matrix Matrix::diag(Matrix &v, int k)
 	}
 
 	return *this;
+}
+
+Matrix Matrix::TDMA(
+	std::vector<double> &A,
+  std::vector<double> &B,
+  std::vector<double> &C,
+  std::vector<double> &D
+)
+{
+	a = &A;
+	b = &B;
+	c = &C;
+	d = &D;
+	std::vector<double> f;
+	f.push_back(dstar(d->size()-1));
+	for(int i = b->size()-2; i > 0; i--){
+		f.insert(f.begin(), dstar(i)-cstar(i)*f[0]);
+	}
+	f.insert(f.begin(), 0);
+	f.push_back(0);
+	Matrix val(f.size(),1);
+	val.setvalue(f);
+	return val;
+}
+
+double Matrix::cstar(int i){
+	if(i == 1)return c->at(i)/b->at(i);
+	else return c->at(i)/(b->at(i)-a->at(i)*cstar(i-1));
+}
+
+double Matrix::dstar(int i){
+	if(i == 1)return d->at(i)/b->at(i);
+	else return (d->at(i)-a->at(i)*dstar(i-1))/(b->at(i)-a->at(i)*cstar(i-1));
 }
 
 #endif
